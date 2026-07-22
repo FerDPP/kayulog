@@ -1,4 +1,4 @@
-module kayulog-backend
+module kayulog
 
 go 1.21
 

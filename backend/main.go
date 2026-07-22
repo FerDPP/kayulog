@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"os"
 
-	"kayulog-backend/database"
-	"kayulog-backend/handlers"
-	"kayulog-backend/middleware"
+	"kayulog/backend/database"
+	"kayulog/backend/handlers"
+	"kayulog/backend/middleware"
 
 	"github.com/gorilla/mux"
 )

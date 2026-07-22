@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"kayulog-backend/database"
+	"kayulog/backend/database"
 )
 
 // GetDashboardStats returns aggregated stats for the admin overview

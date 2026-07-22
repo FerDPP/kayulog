@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"kayulog-backend/database"
-	"kayulog-backend/middleware"
-	"kayulog-backend/models"
+	"kayulog/backend/database"
+	"kayulog/backend/middleware"
+	"kayulog/backend/models"
 
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"

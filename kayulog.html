@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KAYULOG — Sistem Catatan Kayu Borongan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root{
+  --forest-dark:#152A1F;
+  --forest:#1F4531;
+  --forest-mid:#2E5B3F;
+  --bark:#4A3728;
+  --sawdust:#EDE3CC;
+  --sawdust-light:#F8F3E7;
+  --sawdust-card:#FFFDF8;
+  --orange:#C1621F;
+  --orange-dark:#9B4C16;
+  --amber:#B8860B;
+  --ink:#221D14;
+  --ink-soft:#5B5445;
+  --line:#DCD2B8;
+  --danger:#A63A3A;
+  --success:#3F7A4E;
+  --radius:10px;
+  --font-display:'Oswald',sans-serif;
+  --font-body:'Inter',sans-serif;
+  --font-mono:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:var(--font-body);
+  background:var(--sawdust);
+  color:var(--ink);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,.display{font-family:var(--font-display);text-transform:uppercase;letter-spacing:0.03em;}
+.mono{font-family:var(--font-mono);}
+button{font-family:var(--font-body);cursor:pointer;}
+a{color:inherit;}
+::selection{background:var(--orange);color:#fff;}
+
+/* ring texture */
+.ring-mark{display:inline-block;}
+.ring-mark svg{display:block;}
+
+/* Layout wrapper */
+#app{min-height:100vh;}
+
+/* ---------- LOGIN ---------- */
+.auth-shell{
+  display:flex;min-height:100vh;
+}
+.auth-brand{
+  flex:1.1;
+  background:var(--forest-dark);
+  color:var(--sawdust-light);
+  display:flex;flex-direction:column;justify-content:space-between;
+  padding:56px 56px;
+  position:relative;
+  overflow:hidden;
+}
+.auth-brand .rings-bg{
+  position:absolute;right:-120px;bottom:-120px;opacity:0.16;
+}
+.auth-brand-top{position:relative;z-index:2;display:flex;align-items:center;gap:14px;}
+.auth-brand-top .logotext{font-family:var(--font-display);font-size:22px;letter-spacing:0.08em;}
+.auth-brand-mid{position:relative;z-index:2;max-width:420px;}
+.auth-brand-mid h1{font-size:44px;line-height:1.08;margin:0 0 18px 0;color:#fff;}
+.auth-brand-mid p{font-size:15px;line-height:1.6;color:#CFCBAF;margin:0;}
+.auth-brand-bottom{position:relative;z-index:2;display:flex;gap:28px;font-size:13px;color:#A9A48A;}
+.auth-brand-bottom b{color:var(--sawdust-light);font-family:var(--font-mono);font-size:18px;display:block;}
+
+.auth-form-wrap{
+  flex:1;background:var(--sawdust-light);
+  display:flex;align-items:center;justify-content:center;
+  padding:40px;
+}
+.auth-form{width:100%;max-width:380px;}
+.auth-tabs{display:flex;gap:6px;margin-bottom:28px;background:var(--sawdust);padding:4px;border-radius:var(--radius);}
+.auth-tab{flex:1;text-align:center;padding:10px 0;border:none;background:transparent;border-radius:7px;font-weight:600;font-size:13px;letter-spacing:0.03em;color:var(--ink-soft);transition:all .15s;}
+.auth-tab.active{background:var(--forest-dark);color:#fff;}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;letter-spacing:0.02em;}
+.field input,.field select,.field textarea{
+  width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:8px;
+  background:#fff;font-size:14px;color:var(--ink);font-family:var(--font-body);
+}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--forest-mid);box-shadow:0 0 0 3px rgba(46,91,63,0.12);}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:12px 20px;border-radius:8px;border:none;font-weight:600;font-size:14px;
+  transition:transform .1s, opacity .15s;
+}
+.btn:active{transform:scale(0.98);}
+.btn-primary{background:var(--forest-dark);color:#fff;width:100%;}
+.btn-primary:hover{background:var(--forest);}
+.btn-orange{background:var(--orange);color:#fff;}
+.btn-orange:hover{background:var(--orange-dark);}
+.btn-outline{background:transparent;border:1px solid var(--line);color:var(--ink);}
+.btn-outline:hover{border-color:var(--ink-soft);}
+.btn-danger{background:transparent;border:1px solid var(--danger);color:var(--danger);}
+.btn-danger:hover{background:var(--danger);color:#fff;}
+.btn-sm{padding:7px 12px;font-size:12px;border-radius:6px;}
+.btn-block{width:100%;}
+.auth-msg{font-size:13px;color:var(--danger);margin-top:4px;min-height:16px;}
+.auth-hint{margin-top:18px;font-size:12px;color:var(--ink-soft);line-height:1.6;background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 14px;}
+.auth-hint b{color:var(--ink);}
+
+/* ---------- DASHBOARD SHELL ---------- */
+.dash-shell{display:flex;min-height:100vh;}
+.sidebar{
+  width:230px;background:var(--forest-dark);color:var(--sawdust-light);
+  display:flex;flex-direction:column;flex-shrink:0;
+  padding:24px 0;
+}
+.side-brand{display:flex;align-items:center;gap:10px;padding:0 20px 22px;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:10px;}
+.side-brand .logotext{font-family:var(--font-display);font-size:17px;letter-spacing:0.06em;}
+.side-user{padding:14px 20px;display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.side-avatar{width:34px;height:34px;border-radius:50%;background:var(--forest-mid);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;}
+.side-user-name{font-size:13px;font-weight:600;line-height:1.3;}
+.side-user-role{font-size:11px;color:#A9A48A;}
+.side-nav{flex:1;padding:8px 12px;}
+.side-link{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:7px;
+  font-size:13px;font-weight:500;color:#C9C4A9;margin-bottom:2px;border:none;background:transparent;width:100%;text-align:left;
+}
+.side-link:hover{background:rgba(255,255,255,0.06);color:#fff;}
+.side-link.active{background:var(--orange);color:#fff;}
+.side-link svg{flex-shrink:0;}
+.side-foot{padding:12px 12px;border-top:1px solid rgba(255,255,255,0.08);}
+
+.main{flex:1;overflow-x:hidden;}
+.topbar{
+  background:var(--sawdust-light);border-bottom:1px solid var(--line);
+  padding:18px 32px;display:flex;justify-content:space-between;align-items:center;
+}
+.topbar h2{margin:0;font-size:20px;color:var(--ink);}
+.topbar .sub{font-size:12px;color:var(--ink-soft);margin-top:2px;font-family:var(--font-body);text-transform:none;letter-spacing:0;}
+.content{padding:28px 32px;max-width:1180px;}
+
+.cards-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;}
+.stat-card{background:var(--sawdust-card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;}
+.stat-card .label{font-size:12px;color:var(--ink-soft);font-weight:600;letter-spacing:0.02em;text-transform:uppercase;}
+.stat-card .value{font-family:var(--font-mono);font-size:24px;font-weight:600;margin-top:8px;color:var(--ink);}
+.stat-card .value.orange{color:var(--orange-dark);}
+.stat-card .value.green{color:var(--success);}
+
+.panel{background:var(--sawdust-card);border:1px solid var(--line);border-radius:12px;padding:22px 24px;margin-bottom:22px;}
+.panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.panel-head h3{margin:0;font-size:15px;color:var(--ink);}
+
+.cat-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.cat-icon{width:32px;height:32px;border-radius:8px;background:var(--sawdust);display:flex;align-items:center;justify-content:center;color:var(--orange-dark);flex-shrink:0;}
+.cat-bar-wrap{flex:1;}
+.cat-bar-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;color:var(--ink-soft);}
+.cat-bar-label b{color:var(--ink);font-family:var(--font-mono);}
+.cat-bar-track{height:8px;background:var(--sawdust);border-radius:4px;overflow:hidden;}
+.cat-bar-fill{height:100%;background:var(--orange);border-radius:4px;}
+
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;padding:10px 12px;color:var(--ink-soft);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.03em;border-bottom:1px solid var(--line);}
+td{padding:11px 12px;border-bottom:1px solid var(--line);color:var(--ink);}
+tr:last-child td{border-bottom:none;}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:600;background:var(--sawdust);color:var(--ink-soft);}
+.amount{font-family:var(--font-mono);font-weight:600;}
+.filters{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.filters select,.filters input{padding:8px 12px;border:1px solid var(--line);border-radius:7px;font-size:13px;background:#fff;}
+.empty-state{text-align:center;padding:40px 20px;color:var(--ink-soft);}
+.empty-state svg{opacity:0.35;margin-bottom:10px;}
+.empty-state p{font-size:13px;margin:4px 0 0;}
+
+.emp-list{display:flex;flex-direction:column;gap:10px;}
+.emp-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:9px;background:#fff;}
+.emp-row:hover{border-color:var(--forest-mid);cursor:pointer;}
+.emp-row.selected{border-color:var(--orange);background:#FFF8EE;}
+.ring-avatar{width:38px;height:38px;flex-shrink:0;}
+.emp-info{flex:1;min-width:0;}
+.emp-name{font-weight:600;font-size:13px;color:var(--ink);}
+.emp-meta{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:5px;}
+.dot.online{background:var(--success);}
+.dot.stale{background:var(--amber);}
+.dot.offline{background:#B0AA8F;}
+
+#map{height:380px;width:100%;border-radius:9px;z-index:1;}
+.map-layout{display:flex;gap:16px;}
+.map-side{width:260px;flex-shrink:0;max-height:380px;overflow-y:auto;}
+.map-main{flex:1;}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-grid .full{grid-column:1/-1;}
+.cat-choice{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
+.cat-choice label{display:flex;align-items:center;gap:10px;padding:12px;border:1.5px solid var(--line);border-radius:9px;cursor:pointer;font-size:13px;font-weight:500;background:#fff;}
+.cat-choice input{display:none;}
+.cat-choice label.picked{border-color:var(--orange);background:#FFF8EE;color:var(--orange-dark);}
+.cat-choice .cat-icon{background:var(--sawdust);}
+.cat-choice label.picked .cat-icon{background:var(--orange);color:#fff;}
+
+.toast{
+  position:fixed;bottom:24px;right:24px;background:var(--forest-dark);color:#fff;
+  padding:13px 18px;border-radius:8px;font-size:13px;font-weight:500;z-index:999;
+  box-shadow:0 8px 24px rgba(0,0,0,0.2);max-width:320px;
+  display:flex;align-items:center;gap:10px;
+}
+.toast.danger{background:var(--danger);}
+.toast.success{background:var(--success);}
+
+.loc-hero{display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+.loc-status{flex:1;min-width:220px;}
+.loc-status .big{font-family:var(--font-mono);font-size:15px;color:var(--ink);margin-top:4px;}
+.badge-ago{display:inline-block;margin-top:6px;font-size:11px;padding:3px 9px;border-radius:6px;background:var(--sawdust);color:var(--ink-soft);}
+
+@media (max-width:900px){
+  .auth-brand{display:none;}
+  .dash-shell{flex-direction:column;}
+  .sidebar{width:100%;flex-direction:row;align-items:center;padding:10px 12px;overflow-x:auto;}
+  .side-brand,.side-user{display:none;}
+  .side-nav{display:flex;padding:0;gap:4px;flex:none;}
+  .side-link{white-space:nowrap;}
+  .side-foot{padding:0 0 0 8px;border-top:none;}
+  .content{padding:18px;}
+  .map-layout{flex-direction:column;}
+  .map-side{width:100%;}
+  .form-grid,.cat-choice{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ============ ICONS ============ */
+const ICONS = {
+truk:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 7h13v9H1z"/><path d="M14 10h4l3 3v3h-7z"/><circle cx="5.5" cy="18" r="1.6"/><circle cx="17.5" cy="18" r="1.6"/></svg>`,
+gergaji:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><path d="M12 5v-2M12 21v-2M19 12h2M3 12h2M17 7l1.4-1.4M5.6 18.4L7 17M17 17l1.4 1.4M5.6 5.6L7 7"/></svg>`,
+tenaga:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="3.4"/><path d="M4.5 20c0-3.6 3.4-6.5 7.5-6.5s7.5 2.9 7.5 6.5"/></svg>`,
+lainnya:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>`,
+bensin:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22V8l5-5h4l3 3v16"/><path d="M3 12h9"/><path d="M17 8h1a2 2 0 012 2v3.5a1.5 1.5 0 01-3 0"/></svg>`,
+alat:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 105 5l-4 4-2-2-4 4a2 2 0 01-3-3l4-4-2-2 4-4a4 4 0 012 2z"/></svg>`,
+uang:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 6v.01M18 18v.01"/></svg>`,
+makan:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v7a2 2 0 002 2h0a2 2 0 002-2V2M8 11v11M18 2c-2 2-3 4-3 7s1 3 3 3 0-5-3-7"/></svg>`,
+tag:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 12.6L12 21.2 2.8 12 11.4 3.4a2 2 0 011.4-.6H20a1 1 0 011 1v6.8a2 2 0 01-.4 1z"/><circle cx="15.5" cy="7.5" r="1.2" fill="currentColor" stroke="none"/></svg>`,
+pin:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.4"/></svg>`,
+chart:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 19V10M12 19V5M20 19v-6"/></svg>`,
+list:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>`,
+users:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>`,
+map:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M7 3v15M13 6v15"/></svg>`,
+plus:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`,
+logout:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>`,
+trash:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6"/></svg>`,
+home:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>`,
+loc2:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.4"/></svg>`,
+inbox:`<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>`,
+dompet:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12h.01"/><rect x="15" y="10" width="6" height="5" rx="1"/></svg>`,
+log:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="6" r="4"/><circle cx="12" cy="6" r="1.4" fill="currentColor" stroke="none"/><rect x="2" y="14" width="20" height="7" rx="1.5"/><circle cx="6" cy="17.5" r="1.6"/><circle cx="18" cy="17.5" r="1.6"/></svg>`,
+gedung:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V9l7-5 7 5v12"/><path d="M17 21V13l4 2v6M9 21v-4h2v4M9 9h2M13 9h1M9 13h2M13 13h1"/></svg>`
+};
+
+function ringMark(size, seed){
+  const s = size;
+  const rings = [0.95,0.75,0.55,0.35,0.15];
+  const colors = ['#EDE3CC','#C1621F','#EDE3CC','#C1621F','#F8F3E7'];
+  let circles = rings.map((r,i)=>`<circle cx="${s/2}" cy="${s/2}" r="${(s/2)*r-1}" fill="none" stroke="${colors[i%colors.length]}" stroke-width="${s*0.035}"/>`).join('');
+  return `<span class="ring-mark"><svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}">${circles}<circle cx="${s/2}" cy="${s/2}" r="${s*0.06}" fill="#C1621F"/></svg></span>`;
+}
+
+const DEFAULT_CATEGORIES = [
+  {key:'truk', label:'Sewa Truk', iconKey:'truk'},
+  {key:'gergaji', label:'Mesin Gergaji', iconKey:'gergaji'},
+  {key:'tenaga', label:'Bayar Tenaga Kerja', iconKey:'tenaga'},
+  {key:'lainnya', label:'Keperluan Lainnya', iconKey:'lainnya'},
+];
+const ICON_CHOICES = ['truk','gergaji','tenaga','bensin','alat','uang','makan','lainnya'];
+
+function getCats(){ return STATE.categories && STATE.categories.length ? STATE.categories : DEFAULT_CATEGORIES; }
+function catLabel(k){ const c = getCats().find(c=>c.key===k); return c ? c.label : k+' (dihapus)'; }
+function catIcon(k){ const c = getCats().find(c=>c.key===k); return ICONS[c ? c.iconKey : 'lainnya'] || ICONS.lainnya; }
+function slugify(s){
+  return s.toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || 'kategori';
+}
+
+/* ============ STATE ============ */
+let STATE = {
+  users: [],
+  expenses: [],
+  locations: {},
+  capital: [],
+  sales: [],
+  currentUser: null,
+  view: 'loading',
+  authTab: 'login',
+  adminTab: 'overview',
+  userTab: 'overview',
+  selectedEmp: null,
+  filterEmp: 'all',
+  filterCat: 'all',
+  formCat: null,
+  categories: [],
+  newCatIcon: 'lainnya',
+  saleEmp: 'none',
+  mapObj: null,
+};
+
+function rupiah(n){
+  n = Number(n)||0;
+  return 'Rp ' + Math.round(n).toLocaleString('id-ID');
+}
+function timeAgo(ts){
+  if(!ts) return 'Belum pernah';
+  const s = Math.floor((Date.now()-ts)/1000);
+  if(s<60) return 'Baru saja';
+  if(s<3600) return Math.floor(s/60)+' menit lalu';
+  if(s<86400) return Math.floor(s/3600)+' jam lalu';
+  return Math.floor(s/86400)+' hari lalu';
+}
+function fmtDate(d){
+  try{ return new Date(d).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}); }catch(e){ return d; }
+}
+function initials(name){
+  if(!name) return '?';
+  return name.trim().split(/\s+/).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+}
+
+function toast(msg, type){
+  const t = document.createElement('div');
+  t.className = 'toast'+(type?' '+type:'');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=>{ t.remove(); }, 3200);
+}
+
+/* ============ STORAGE ============ */
+async function safeGet(key){
+  try{
+    const r = await window.storage.get(key, true);
+    return r ? JSON.parse(r.value) : null;
+  }catch(e){ return null; }
+}
+async function safeSet(key, value){
+  try{
+    await window.storage.set(key, JSON.stringify(value), true);
+    return true;
+  }catch(e){ toast('Gagal menyimpan data. Coba lagi.', 'danger'); return false; }
+}
+
+async function loadAll(){
+  let users = await safeGet('kayulog-users');
+  if(!users){
+    users = [{username:'admin', password:'admin123', name:'Admin Utama', role:'admin'}];
+    await safeSet('kayulog-users', users);
+  }
+  STATE.users = users;
+  STATE.expenses = await safeGet('kayulog-expenses') || [];
+  STATE.locations = await safeGet('kayulog-locations') || {};
+  STATE.capital = await safeGet('kayulog-capital') || [];
+  STATE.sales = await safeGet('kayulog-sales') || [];
+  let cats = await safeGet('kayulog-categories');
+  if(!cats || !cats.length){
+    cats = DEFAULT_CATEGORIES.slice();
+    await safeSet('kayulog-categories', cats);
+  }
+  STATE.categories = cats;
+}
+async function saveUsers(){ await safeSet('kayulog-users', STATE.users); }
+async function saveExpenses(){ await safeSet('kayulog-expenses', STATE.expenses); }
+async function saveLocations(){ await safeSet('kayulog-locations', STATE.locations); }
+async function saveCategories(){ await safeSet('kayulog-categories', STATE.categories); }
+async function saveCapital(){ await safeSet('kayulog-capital', STATE.capital); }
+async function saveSales(){ await safeSet('kayulog-sales', STATE.sales); }
+
+/* ============ AUTH ============ */
+function switchAuthTab(tab){ STATE.authTab = tab; render(); }
+
+async function doLogin(){
+  const u = document.getElementById('li-username').value.trim();
+  const p = document.getElementById('li-password').value;
+  const msg = document.getElementById('auth-msg');
+  if(!u || !p){ msg.textContent = 'Isi username dan kata sandi.'; return; }
+  const found = STATE.users.find(x=>x.username===u && x.password===p);
+  if(!found){ msg.textContent = 'Username atau kata sandi salah.'; return; }
+  STATE.currentUser = found;
+  STATE.view = found.role === 'admin' ? 'admin' : 'user';
+  render();
+  toast('Selamat datang, '+found.name);
+}
+
+async function doRegister(){
+  const name = document.getElementById('rg-name').value.trim();
+  const u = document.getElementById('rg-username').value.trim().toLowerCase();
+  const p = document.getElementById('rg-password').value;
+  const msg = document.getElementById('auth-msg');
+  if(!name || !u || !p){ msg.textContent = 'Semua kolom wajib diisi.'; return; }
+  if(p.length < 4){ msg.textContent = 'Kata sandi minimal 4 karakter.'; return; }
+  if(STATE.users.some(x=>x.username===u)){ msg.textContent = 'Username sudah dipakai, pilih yang lain.'; return; }
+  const newUser = {username:u, password:p, name, role:'user'};
+  STATE.users.push(newUser);
+  await saveUsers();
+  STATE.currentUser = newUser;
+  STATE.view = 'user';
+  render();
+  toast('Akun dibuat. Selamat bekerja, '+name);
+}
+
+function doLogout(){
+  STATE.currentUser = null;
+  STATE.view = 'login';
+  STATE.authTab = 'login';
+  render();
+}
+
+/* ============ EXPENSE ACTIONS ============ */
+function pickCat(key){
+  STATE.formCat = key;
+  render();
+}
+async function submitExpense(){
+  const msg = document.getElementById('exp-msg');
+  const amountEl = document.getElementById('exp-amount');
+  const noteEl = document.getElementById('exp-note');
+  const dateEl = document.getElementById('exp-date');
+  const amount = Number(amountEl.value);
+  if(!STATE.formCat){ msg.textContent = 'Pilih kategori pengeluaran.'; return; }
+  if(!amount || amount<=0){ msg.textContent = 'Masukkan jumlah yang valid.'; return; }
+  const entry = {
+    id: 'e'+Date.now()+Math.floor(Math.random()*1000),
+    username: STATE.currentUser.username,
+    name: STATE.currentUser.name,
+    category: STATE.formCat,
+    amount: amount,
+    note: noteEl.value.trim(),
+    date: dateEl.value || new Date().toISOString().slice(0,10),
+    createdAt: Date.now()
+  };
+  STATE.expenses.unshift(entry);
+  await saveExpenses();
+  STATE.formCat = null;
+  STATE.userTab = 'riwayat';
+  render();
+  toast('Pengeluaran tercatat.', 'success');
+}
+async function deleteExpense(id){
+  STATE.expenses = STATE.expenses.filter(e=>e.id!==id);
+  await saveExpenses();
+  render();
+  toast('Catatan dihapus.');
+}
+
+/* ============ LOCATION ============ */
+function shareLocation(){
+  if(!navigator.geolocation){ toast('Perangkat tidak mendukung lokasi.', 'danger'); return; }
+  const btn = document.getElementById('share-loc-btn');
+  if(btn) btn.textContent = 'Mengambil lokasi...';
+  navigator.geolocation.getCurrentPosition(async (pos)=>{
+    STATE.locations[STATE.currentUser.username] = {
+      lat: pos.coords.latitude,
+      lng: pos.coords.longitude,
+      accuracy: pos.coords.accuracy,
+      ts: Date.now()
+    };
+    await saveLocations();
+    render();
+    toast('Lokasi dibagikan ke admin.', 'success');
+  }, (err)=>{
+    toast('Tidak bisa mengambil lokasi: izin ditolak atau tidak tersedia.', 'danger');
+    if(btn) btn.innerHTML = ICONS.loc2 + ' Bagikan lokasi sekarang';
+  }, {enableHighAccuracy:true, timeout:12000});
+}
+
+/* ============ NAV ============ */
+function setAdminTab(t){ STATE.adminTab = t; STATE.selectedEmp = null; render(); }
+function setUserTab(t){ STATE.userTab = t; STATE.formCat = null; render(); }
+function selectEmp(username){ STATE.selectedEmp = username; render(); }
+function setFilterEmp(v){ STATE.filterEmp = v; render(); }
+function setFilterCat(v){ STATE.filterCat = v; render(); }
+async function removeEmployee(username){
+  if(!confirm('Hapus karyawan ini? Data pengeluaran & lokasinya tetap tersimpan.')) return;
+  STATE.users = STATE.users.filter(u=>u.username!==username);
+  await saveUsers();
+  render();
+  toast('Karyawan dihapus dari daftar.');
+}
+
+function pickNewCatIcon(iconKey){
+  STATE.newCatIcon = iconKey;
+  render();
+}
+async function addCategory(){
+  const msg = document.getElementById('cat-msg');
+  const input = document.getElementById('new-cat-label');
+  const label = input.value.trim();
+  if(!label){ msg.textContent = 'Nama kategori tidak boleh kosong.'; return; }
+  let key = slugify(label);
+  if(STATE.categories.some(c=>c.key===key)){
+    let n = 2;
+    while(STATE.categories.some(c=>c.key===key+'-'+n)) n++;
+    key = key+'-'+n;
+  }
+  STATE.categories.push({key, label, iconKey: STATE.newCatIcon});
+  await saveCategories();
+  STATE.newCatIcon = 'lainnya';
+  render();
+  toast('Kategori "'+label+'" ditambahkan.', 'success');
+}
+async function deleteCategory(key){
+  const usedCount = STATE.expenses.filter(e=>e.category===key).length;
+  const label = catLabel(key);
+  const warn = usedCount>0
+    ? `Kategori "${label}" sudah dipakai di ${usedCount} catatan pengeluaran. Catatan itu tetap ada, hanya label kategorinya akan tertulis "dihapus". Lanjutkan hapus?`
+    : `Hapus kategori "${label}"?`;
+  if(!confirm(warn)) return;
+  STATE.categories = STATE.categories.filter(c=>c.key!==key);
+  await saveCategories();
+  render();
+  toast('Kategori dihapus.');
+}
+
+/* ---- Modal Karyawan ---- */
+async function addCapital(){
+  const msg = document.getElementById('cap-msg');
+  const empSel = document.getElementById('cap-emp');
+  const amountEl = document.getElementById('cap-amount');
+  const dateEl = document.getElementById('cap-date');
+  const noteEl = document.getElementById('cap-note');
+  const username = empSel.value;
+  const amount = Number(amountEl.value);
+  if(!username){ msg.textContent = 'Pilih karyawan penerima modal.'; return; }
+  if(!amount || amount<=0){ msg.textContent = 'Masukkan jumlah modal yang valid.'; return; }
+  const emp = STATE.users.find(u=>u.username===username);
+  STATE.capital.unshift({
+    id:'c'+Date.now()+Math.floor(Math.random()*1000),
+    username, name: emp?emp.name:username,
+    amount, date: dateEl.value || new Date().toISOString().slice(0,10),
+    note: noteEl.value.trim(), createdAt: Date.now()
+  });
+  await saveCapital();
+  render();
+  toast('Modal dicatat untuk '+(emp?emp.name:username)+'.', 'success');
+}
+async function deleteCapital(id){
+  if(!confirm('Hapus catatan modal ini?')) return;
+  STATE.capital = STATE.capital.filter(c=>c.id!==id);
+  await saveCapital();
+  render();
+  toast('Catatan modal dihapus.');
+}
+
+/* ---- Penjualan Kayu ---- */
+function setSaleEmp(v){ STATE.saleEmp = v; render(); }
+async function addSale(){
+  const msg = document.getElementById('sale-msg');
+  const companyEl = document.getElementById('sale-company');
+  const amountEl = document.getElementById('sale-amount');
+  const volumeEl = document.getElementById('sale-volume');
+  const dateEl = document.getElementById('sale-date');
+  const noteEl = document.getElementById('sale-note');
+  const company = companyEl.value.trim();
+  const amount = Number(amountEl.value);
+  if(!company){ msg.textContent = 'Nama perusahaan pembeli wajib diisi.'; return; }
+  if(!amount || amount<=0){ msg.textContent = 'Masukkan jumlah penjualan yang valid.'; return; }
+  const emp = STATE.saleEmp !== 'none' ? STATE.users.find(u=>u.username===STATE.saleEmp) : null;
+  STATE.sales.unshift({
+    id:'s'+Date.now()+Math.floor(Math.random()*1000),
+    company, amount,
+    volume: volumeEl.value.trim(),
+    date: dateEl.value || new Date().toISOString().slice(0,10),
+    note: noteEl.value.trim(),
+    username: emp ? emp.username : null,
+    empName: emp ? emp.name : null,
+    createdAt: Date.now()
+  });
+  await saveSales();
+  STATE.saleEmp = 'none';
+  render();
+  toast('Penjualan kayu tercatat.', 'success');
+}
+async function deleteSale(id){
+  if(!confirm('Hapus catatan penjualan ini?')) return;
+  STATE.sales = STATE.sales.filter(s=>s.id!==id);
+  await saveSales();
+  render();
+  toast('Catatan penjualan dihapus.');
+}
+
+/* ============ RENDER: LOGIN ============ */
+function renderLogin(){
+  const isLogin = STATE.authTab === 'login';
+  return `
+  <div class="auth-shell">
+    <div class="auth-brand">
+      <div class="rings-bg">${ringMark(360)}</div>
+      <div class="auth-brand-top">
+        ${ringMark(30)}
+        <span class="logotext">KAYULOG</span>
+      </div>
+      <div class="auth-brand-mid">
+        <h1>Catat setiap<br>rupiah di lapangan.</h1>
+        <p>Sistem informasi untuk usaha kayu borongan. Pantau pengeluaran tim — sewa truk, mesin gergaji, upah tenaga, dan keperluan lain — sekaligus tahu lokasi mereka secara langsung.</p>
+      </div>
+      <div class="auth-brand-bottom">
+        <div><b>4</b>kategori biaya</div>
+        <div><b>2</b>peran akses</div>
+        <div><b>Live</b>lokasi tim</div>
+      </div>
+    </div>
+    <div class="auth-form-wrap">
+      <div class="auth-form">
+        ${ringMark(38)}
+        <div style="height:16px"></div>
+        <div class="auth-tabs">
+          <button class="auth-tab ${isLogin?'active':''}" onclick="switchAuthTab('login')">Masuk</button>
+          <button class="auth-tab ${!isLogin?'active':''}" onclick="switchAuthTab('register')">Daftar Karyawan</button>
+        </div>
+        ${isLogin ? `
+          <div class="field"><label>Username</label><input id="li-username" placeholder="mis. budi"></div>
+          <div class="field"><label>Kata sandi</label><input id="li-password" type="password" placeholder="Kata sandi"></div>
+          <div id="auth-msg" class="auth-msg"></div>
+          <button class="btn btn-primary" onclick="doLogin()">Masuk</button>
+          <div class="auth-hint"><b>Akun admin bawaan:</b> username <b>admin</b>, kata sandi <b>admin123</b>. Segera ganti bila perlu.</div>
+        ` : `
+          <div class="field"><label>Nama lengkap</label><input id="rg-name" placeholder="Nama Anda"></div>
+          <div class="field"><label>Username</label><input id="rg-username" placeholder="Buat username"></div>
+          <div class="field"><label>Kata sandi</label><input id="rg-password" type="password" placeholder="Minimal 4 karakter"></div>
+          <div id="auth-msg" class="auth-msg"></div>
+          <button class="btn btn-primary" onclick="doRegister()">Daftar sebagai Karyawan</button>
+          <div class="auth-hint">Akun yang didaftarkan di sini otomatis berperan sebagai <b>Karyawan</b>, digunakan untuk mencatat pengeluaran lapangan dan membagikan lokasi.</div>
+        `}
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ============ RENDER: SIDEBAR ============ */
+function sidebar(role, active, tabs){
+  const u = STATE.currentUser;
+  return `
+  <div class="sidebar">
+    <div class="side-brand">${ringMark(24)}<span class="logotext">KAYULOG</span></div>
+    <div class="side-user">
+      <div class="side-avatar">${initials(u.name)}</div>
+      <div>
+        <div class="side-user-name">${u.name}</div>
+        <div class="side-user-role">${role==='admin'?'Admin':'Karyawan'}</div>
+      </div>
+    </div>
+    <div class="side-nav">
+      ${tabs.map(t=>`<button class="side-link ${active===t.key?'active':''}" onclick="${t.action}">${t.icon}${t.label}</button>`).join('')}
+    </div>
+    <div class="side-foot">
+      <button class="side-link" onclick="doLogout()">${ICONS.logout}Keluar</button>
+    </div>
+  </div>`;
+}
+
+/* ============ RENDER: ADMIN ============ */
+function adminExpenses(){ return STATE.expenses; }
+function totalOf(list){ return list.reduce((s,e)=>s+Number(e.amount||0),0); }
+
+function renderAdminOverview(){
+  const exp = adminExpenses();
+  const now = new Date();
+  const thisMonth = exp.filter(e=>{ const d=new Date(e.date); return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear(); });
+  const total = totalOf(exp);
+  const totalMonth = totalOf(thisMonth);
+  const employees = STATE.users.filter(u=>u.role==='user');
+  const byCat = getCats().map(c=>({...c, icon: ICONS[c.iconKey]||ICONS.lainnya, total: totalOf(exp.filter(e=>e.category===c.key))}));
+  const maxCat = Math.max(1, ...byCat.map(c=>c.total));
+  const recent = exp.slice(0,6);
+
+  const totalCapital = totalOf(STATE.capital);
+  const totalSales = totalOf(STATE.sales);
+  const netIncome = totalSales - totalCapital;
+
+  return `
+  <div class="panel" style="background:var(--forest-dark);border:none;">
+    <div class="panel-head"><h3 style="color:#fff;">Penghasilan akhir</h3><span class="tag" style="background:rgba(255,255,255,0.12);color:#EDE3CC;">Penjualan kayu &minus; modal diberikan</span></div>
+    <div class="cards-row" style="margin-bottom:0;">
+      <div class="stat-card" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);">
+        <div class="label" style="color:#A9A48A;">Total modal diberikan</div>
+        <div class="value" style="color:#fff;">${rupiah(totalCapital)}</div>
+      </div>
+      <div class="stat-card" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);">
+        <div class="label" style="color:#A9A48A;">Total penjualan kayu</div>
+        <div class="value" style="color:#fff;">${rupiah(totalSales)}</div>
+      </div>
+      <div class="stat-card" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);">
+        <div class="label" style="color:#A9A48A;">Penghasilan akhir</div>
+        <div class="value" style="color:${netIncome>=0?'#8FD1A0':'#F09595'};">${rupiah(netIncome)}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cards-row">
+    <div class="stat-card"><div class="label">Pengeluaran bulan ini</div><div class="value orange">${rupiah(totalMonth)}</div></div>
+    <div class="stat-card"><div class="label">Total pengeluaran</div><div class="value">${rupiah(total)}</div></div>
+    <div class="stat-card"><div class="label">Karyawan aktif</div><div class="value green">${employees.length}</div></div>
+    <div class="stat-card"><div class="label">Total transaksi</div><div class="value">${exp.length}</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h3>Pengeluaran per kategori</h3></div>
+    ${byCat.map(c=>`
+      <div class="cat-row">
+        <div class="cat-icon">${c.icon}</div>
+        <div class="cat-bar-wrap">
+          <div class="cat-bar-label"><span>${c.label}</span><b>${rupiah(c.total)}</b></div>
+          <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${(c.total/maxCat*100)}%"></div></div>
+        </div>
+      </div>
+    `).join('')}
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h3>Aktivitas terbaru</h3></div>
+    ${recent.length ? `
+    <table>
+      <thead><tr><th>Karyawan</th><th>Kategori</th><th>Catatan</th><th>Tanggal</th><th style="text-align:right">Jumlah</th></tr></thead>
+      <tbody>
+        ${recent.map(e=>`
+          <tr>
+            <td>${e.name}</td>
+            <td><span class="tag">${catIcon(e.category)} ${catLabel(e.category)}</span></td>
+            <td style="color:var(--ink-soft)">${e.note||'—'}</td>
+            <td>${fmtDate(e.date)}</td>
+            <td style="text-align:right" class="amount">${rupiah(e.amount)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>` : emptyState('Belum ada pengeluaran tercatat.')}
+  </div>
+  `;
+}
+
+function emptyState(text){
+  return `<div class="empty-state">${ICONS.inbox}<p>${text}</p></div>`;
+}
+
+function renderAdminLocations(){
+  const employees = STATE.users.filter(u=>u.role==='user');
+  const rows = employees.map(u=>{
+    const loc = STATE.locations[u.username];
+    let status = 'offline', dotClass='offline';
+    if(loc){
+      const age = Date.now()-loc.ts;
+      if(age < 15*60*1000){ status='Aktif'; dotClass='online'; }
+      else if(age < 24*60*60*1000){ status='Perlu update'; dotClass='stale'; }
+      else { status='Lama'; dotClass='stale'; }
+    } else { status='Belum bagikan'; dotClass='offline'; }
+    return {u, loc, status, dotClass};
+  });
+
+  return `
+  <div class="panel" style="margin-bottom:16px;">
+    <div class="panel-head"><h3>Lokasi karyawan</h3></div>
+    <div class="map-layout">
+      <div class="map-side">
+        ${rows.length ? rows.map(r=>`
+          <div class="emp-row ${STATE.selectedEmp===r.u.username?'selected':''}" onclick="selectEmp('${r.u.username}')">
+            <div class="ring-avatar">${ringMark(38)}</div>
+            <div class="emp-info">
+              <div class="emp-name">${r.u.name}</div>
+              <div class="emp-meta"><span class="dot ${r.dotClass}"></span>${r.status} · ${timeAgo(r.loc && r.loc.ts)}</div>
+            </div>
+          </div>
+        `).join('') : emptyState('Belum ada karyawan terdaftar.')}
+      </div>
+      <div class="map-main">
+        <div id="map"></div>
+      </div>
+    </div>
+  </div>
+  `;
+}
+
+function renderAdminExpensesTab(){
+  const employees = STATE.users.filter(u=>u.role==='user');
+  let list = adminExpenses();
+  if(STATE.filterEmp !== 'all') list = list.filter(e=>e.username===STATE.filterEmp);
+  if(STATE.filterCat !== 'all') list = list.filter(e=>e.category===STATE.filterCat);
+  const total = totalOf(list);
+
+  return `
+  <div class="panel">
+    <div class="panel-head"><h3>Data pengeluaran</h3><span class="tag">Total: ${rupiah(total)}</span></div>
+    <div class="filters">
+      <select onchange="setFilterEmp(this.value)">
+        <option value="all">Semua karyawan</option>
+        ${employees.map(u=>`<option value="${u.username}" ${STATE.filterEmp===u.username?'selected':''}>${u.name}</option>`).join('')}
+      </select>
+      <select onchange="setFilterCat(this.value)">
+        <option value="all">Semua kategori</option>
+        ${getCats().map(c=>`<option value="${c.key}" ${STATE.filterCat===c.key?'selected':''}>${c.label}</option>`).join('')}
+      </select>
+    </div>
+    ${list.length ? `
+    <table>
+      <thead><tr><th>Karyawan</th><th>Kategori</th><th>Catatan</th><th>Tanggal</th><th style="text-align:right">Jumlah</th><th></th></tr></thead>
+      <tbody>
+        ${list.map(e=>`
+          <tr>
+            <td>${e.name}</td>
+            <td><span class="tag">${catIcon(e.category)} ${catLabel(e.category)}</span></td>
+            <td style="color:var(--ink-soft)">${e.note||'—'}</td>
+            <td>${fmtDate(e.date)}</td>
+            <td style="text-align:right" class="amount">${rupiah(e.amount)}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteExpense('${e.id}')">${ICONS.trash}</button></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>` : emptyState('Tidak ada data yang cocok dengan filter.')}
+  </div>
+  `;
+}
+
+function renderAdminCapital(){
+  const employees = STATE.users.filter(u=>u.role==='user');
+  const totalCapital = totalOf(STATE.capital);
+
+  const perEmp = employees.map(u=>{
+    const cap = totalOf(STATE.capital.filter(c=>c.username===u.username));
+    const spent = totalOf(STATE.expenses.filter(e=>e.username===u.username));
+    return {u, cap, spent, sisa: cap-spent};
+  });
+
+  return `
+  <div class="panel">
+    <div class="panel-head"><h3>Beri modal ke karyawan</h3></div>
+    <div class="form-grid">
+      <div class="field"><label>Karyawan</label>
+        <select id="cap-emp">
+          <option value="">Pilih karyawan</option>
+          ${employees.map(u=>`<option value="${u.username}">${u.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label>Jumlah modal (Rp)</label><input id="cap-amount" type="number" min="0" placeholder="mis. 2000000"></div>
+      <div class="field"><label>Tanggal</label><input id="cap-date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="field full"><label>Catatan (opsional)</label><input id="cap-note" placeholder="mis. modal borongan lokasi Cianjur"></div>
+    </div>
+    <div id="cap-msg" class="auth-msg"></div>
+    <button class="btn btn-orange" onclick="addCapital()">${ICONS.plus} Simpan modal</button>
+    ${!employees.length ? `<div class="auth-hint" style="margin-top:12px;">Belum ada karyawan terdaftar. Minta karyawan mendaftar dulu lewat halaman masuk.</div>` : ''}
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h3>Ringkasan modal per karyawan</h3></div>
+    ${perEmp.length ? `
+    <table>
+      <thead><tr><th>Karyawan</th><th style="text-align:right">Modal diterima</th><th style="text-align:right">Pengeluaran</th><th style="text-align:right">Sisa modal</th></tr></thead>
+      <tbody>
+        ${perEmp.map(r=>`
+          <tr>
+            <td>${r.u.name}</td>
+            <td style="text-align:right" class="amount">${rupiah(r.cap)}</td>
+            <td style="text-align:right" class="amount">${rupiah(r.spent)}</td>
+            <td style="text-align:right;color:${r.sisa<0?'var(--danger)':'var(--ink)'}" class="amount">${rupiah(r.sisa)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>` : emptyState('Belum ada karyawan.')}
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h3>Riwayat modal diberikan</h3><span class="tag">Total: ${rupiah(totalCapital)}</span></div>
+    ${STATE.capital.length ? `
+    <table>
+      <thead><tr><th>Karyawan</th><th>Catatan</th><th>Tanggal</th><th style="text-align:right">Jumlah</th><th></th></tr></thead>
+      <tbody>
+        ${STATE.capital.map(c=>`
+          <tr>
+            <td>${c.name}</td>
+            <td style="color:var(--ink-soft)">${c.note||'—'}</td>
+            <td>${fmtDate(c.date)}</td>
+            <td style="text-align:right" class="amount">${rupiah(c.amount)}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteCapital('${c.id}')">${ICONS.trash}</button></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>` : emptyState('Belum ada modal yang diberikan.')}
+  </div>
+  `;
+}
+
+function renderAdminSales(){
+  const employees = STATE.users.filter(u=>u.role==='user');
+  const totalSales = totalOf(STATE.sales);
+  return `
+  <div class="panel">
+    <div class="panel-head"><h3>Catat penjualan kayu</h3></div>
+    <div class="form-grid">
+      <div class="field"><label>Nama perusahaan pembeli</label><input id="sale-company" placeholder="mis. PT Kayu Sejahtera"></div>
+      <div class="field"><label>Jumlah penjualan (Rp)</label><input id="sale-amount" type="number" min="0" placeholder="mis. 15000000"></div>
+      <div class="field"><label>Volume kayu (opsional)</label><input id="sale-volume" placeholder="mis. 12 m3"></div>
+      <div class="field"><label>Tanggal</label><input id="sale-date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="field"><label>Terkait karyawan/tim (opsional)</label>
+        <select id="sale-emp-select" onchange="setSaleEmp(this.value)">
+          <option value="none" ${STATE.saleEmp==='none'?'selected':''}>Tidak terkait</option>
+          ${employees.map(u=>`<option value="${u.username}" ${STATE.saleEmp===u.username?'selected':''}>${u.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field full"><label>Catatan (opsional)</label><input id="sale-note" placeholder="mis. kayu jati hasil tebang minggu ini"></div>
+    </div>
+    <div id="sale-msg" class="auth-msg"></div>
+    <button class="btn btn-orange" onclick="addSale()">${ICONS.plus} Simpan penjualan</button>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h3>Riwayat penjualan kayu</h3><span class="tag">Total: ${rupiah(totalSales)}</span></div>
+    ${STATE.sales.length ? `
+    <table>
+      <thead><tr><th>Perusahaan</th><th>Karyawan/Tim</th><th>Volume</th><th>Tanggal</th><th style="text-align:right">Jumlah</th><th></th></tr></thead>
+      <tbody>
+        ${STATE.sales.map(s=>`
+          <tr>
+            <td><span class="tag">${ICONS.gedung} ${s.company}</span></td>
+            <td>${s.empName || '—'}</td>
+            <td style="color:var(--ink-soft)">${s.volume||'—'}</td>
+            <td>${fmtDate(s.date)}</td>
+            <td style="text-align:right" class="amount">${rupiah(s.amount)}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteSale('${s.id}')">${ICONS.trash}</button></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>` : emptyState('Belum ada penjualan kayu tercatat.')}
+  </div>
+  `;
+}
+
+function renderAdminEmployees(){
+  const employees = STATE.users.filter(u=>u.role==='user');
+  return `
+  <div class="panel">
+    <div class="panel-head"><h3>Daftar karyawan</h3><span class="tag">${employees.length} orang</span></div>
+    ${employees.length ? `
+    <table>
+      <thead><tr><th>Nama</th><th>Username</th><th>Total pengeluaran</th><th>Lokasi terakhir</th><th></th></tr></thead>
+      <tbody>
+        ${employees.map(u=>{
+          const own = STATE.expenses.filter(e=>e.username===u.username);
+          const loc = STATE.locations[u.username];
+          return `<tr>
+            <td>${u.name}</td>
+            <td class="mono">${u.username}</td>
+            <td class="amount">${rupiah(totalOf(own))}</td>
+            <td>${timeAgo(loc && loc.ts)}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="removeEmployee('${u.username}')">${ICONS.trash}</button></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>` : emptyState('Belum ada karyawan yang mendaftar.')}
+  </div>
+  `;
+}
+
+function renderAdminCategories(){
+  const cats = getCats();
+  return `
+  <div class="panel">
+    <div class="panel-head"><h3>Kategori aktif</h3><span class="tag">${cats.length} kategori</span></div>
+    ${cats.length ? `
+    <table>
+      <thead><tr><th>Ikon</th><th>Nama kategori</th><th>Dipakai di</th><th></th></tr></thead>
+      <tbody>
+        ${cats.map(c=>{
+          const usedCount = STATE.expenses.filter(e=>e.category===c.key).length;
+          return `<tr>
+            <td><span class="cat-icon" style="width:28px;height:28px;">${ICONS[c.iconKey]||ICONS.lainnya}</span></td>
+            <td>${c.label}</td>
+            <td style="color:var(--ink-soft)">${usedCount} catatan</td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteCategory('${c.key}')">${ICONS.trash}</button></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>` : emptyState('Belum ada kategori. Tambahkan minimal satu di bawah.')}
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h3>Tambah kategori baru</h3></div>
+    <div class="field"><label>Nama kategori</label><input id="new-cat-label" placeholder="mis. Bensin Alat Berat"></div>
+    <label style="font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:8px;">Pilih ikon</label>
+    <div class="cat-choice" style="grid-template-columns:repeat(4,1fr);">
+      ${ICON_CHOICES.map(ik=>`
+        <label class="${STATE.newCatIcon===ik?'picked':''}" onclick="pickNewCatIcon('${ik}')">
+          <span class="cat-icon">${ICONS[ik]}</span>
+        </label>
+      `).join('')}
+    </div>
+    <div id="cat-msg" class="auth-msg"></div>
+    <button class="btn btn-orange" onclick="addCategory()">${ICONS.plus} Tambah kategori</button>
+  </div>
+  `;
+}
+
+function renderAdmin(){
+  const tabs = [
+    {key:'overview', label:'Ringkasan', icon:ICONS.home, action:"setAdminTab('overview')"},
+    {key:'capital', label:'Modal Karyawan', icon:ICONS.dompet, action:"setAdminTab('capital')"},
+    {key:'expenses', label:'Data Pengeluaran', icon:ICONS.list, action:"setAdminTab('expenses')"},
+    {key:'sales', label:'Penjualan Kayu', icon:ICONS.log, action:"setAdminTab('sales')"},
+    {key:'locations', label:'Lokasi Karyawan', icon:ICONS.map, action:"setAdminTab('locations')"},
+    {key:'categories', label:'Kategori', icon:ICONS.tag, action:"setAdminTab('categories')"},
+    {key:'employees', label:'Karyawan', icon:ICONS.users, action:"setAdminTab('employees')"},
+  ];
+  const titles = {overview:'Ringkasan', capital:'Modal karyawan', locations:'Lokasi karyawan', expenses:'Data pengeluaran', sales:'Penjualan kayu', categories:'Kategori pengeluaran', employees:'Karyawan'};
+  const subs = {
+    overview:'Gambaran umum modal, pengeluaran, dan penghasilan akhir.',
+    capital:'Catat modal yang Anda berikan ke setiap karyawan.',
+    locations:'Pantau posisi terkini setiap karyawan lapangan.',
+    expenses:'Semua catatan pengeluaran dari seluruh karyawan.',
+    sales:'Catat hasil penjualan kayu ke perusahaan pembeli.',
+    categories:'Tambah atau hapus kategori sesuai kebutuhan lapangan.',
+    employees:'Kelola karyawan yang terdaftar di sistem.'
+  };
+  let body = '';
+  if(STATE.adminTab==='overview') body = renderAdminOverview();
+  else if(STATE.adminTab==='capital') body = renderAdminCapital();
+  else if(STATE.adminTab==='locations') body = renderAdminLocations();
+  else if(STATE.adminTab==='expenses') body = renderAdminExpensesTab();
+  else if(STATE.adminTab==='sales') body = renderAdminSales();
+  else if(STATE.adminTab==='categories') body = renderAdminCategories();
+  else if(STATE.adminTab==='employees') body = renderAdminEmployees();
+
+  return `
+  <div class="dash-shell">
+    ${sidebar('admin', STATE.adminTab, tabs)}
+    <div class="main">
+      <div class="topbar"><div><h2>${titles[STATE.adminTab]}</h2><div class="sub">${subs[STATE.adminTab]}</div></div></div>
+      <div class="content">${body}</div>
+    </div>
+  </div>`;
+}
+
+/* ============ RENDER: USER ============ */
+function myExpenses(){ return STATE.expenses.filter(e=>e.username===STATE.currentUser.username); }
+
+function renderUserOverview(){
+  const mine = myExpenses();
+  const now = new Date();
+  const thisMonth = mine.filter(e=>{ const d=new Date(e.date); return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear(); });
+  const byCat = getCats().map(c=>({...c, icon: ICONS[c.iconKey]||ICONS.lainnya, total: totalOf(mine.filter(e=>e.category===c.key))}));
+  const maxCat = Math.max(1, ...byCat.map(c=>c.total));
+  const loc = STATE.locations[STATE.currentUser.username];
+  const myCapital = totalOf(STATE.capital.filter(c=>c.username===STATE.currentUser.username));
+  const sisaModal = myCapital - totalOf(mine);
+
+  return `
+  <div class="panel" style="background:var(--forest-dark);border:none;margin-bottom:16px;">
+    <div class="panel-head"><h3 style="color:#fff;">Modal saya</h3>
+      <button class="btn btn-outline btn-sm" style="background:transparent;border-color:rgba(255,255,255,0.3);color:#fff;" onclick="setUserTab('modal')">Lihat riwayat</button>
+    </div>
+    <div class="cards-row" style="margin-bottom:0;">
+      <div class="stat-card" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);">
+        <div class="label" style="color:#A9A48A;">Modal diterima</div>
+        <div class="value" style="color:#fff;">${rupiah(myCapital)}</div>
+      </div>
+      <div class="stat-card" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);">
+        <div class="label" style="color:#A9A48A;">Sisa modal</div>
+        <div class="value" style="color:${sisaModal<0?'#F09595':'#8FD1A0'};">${rupiah(sisaModal)}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cards-row">
+    <div class="stat-card"><div class="label">Total pengeluaran saya</div><div class="value orange">${rupiah(totalOf(mine))}</div></div>
+    <div class="stat-card"><div class="label">Bulan ini</div><div class="value">${rupiah(totalOf(thisMonth))}</div></div>
+    <div class="stat-card"><div class="label">Jumlah catatan</div><div class="value">${mine.length}</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h3>Rincian per kategori</h3></div>
+    ${byCat.map(c=>`
+      <div class="cat-row">
+        <div class="cat-icon">${c.icon}</div>
+        <div class="cat-bar-wrap">
+          <div class="cat-bar-label"><span>${c.label}</span><b>${rupiah(c.total)}</b></div>
+          <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${(c.total/maxCat*100)}%"></div></div>
+        </div>
+      </div>
+    `).join('')}
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h3>Status lokasi</h3>
+      <button class="btn btn-orange btn-sm" onclick="setUserTab('lokasi')">${ICONS.loc2} Kelola lokasi</button>
+    </div>
+    <p style="font-size:13px;color:var(--ink-soft);margin:0;">
+      ${loc ? 'Lokasi terakhir dibagikan '+timeAgo(loc.ts)+'.' : 'Anda belum pernah membagikan lokasi ke admin.'}
+    </p>
+  </div>
+  `;
+}
+
+function renderUserCapital(){
+  const mine = STATE.capital.filter(c=>c.username===STATE.currentUser.username);
+  const myCapital = totalOf(mine);
+  const spent = totalOf(myExpenses());
+  const sisa = myCapital - spent;
+  return `
+  <div class="cards-row">
+    <div class="stat-card"><div class="label">Total modal diterima</div><div class="value">${rupiah(myCapital)}</div></div>
+    <div class="stat-card"><div class="label">Terpakai (pengeluaran saya)</div><div class="value orange">${rupiah(spent)}</div></div>
+    <div class="stat-card"><div class="label">Sisa modal</div><div class="value ${sisa<0?'':'green'}" style="${sisa<0?'color:var(--danger);':''}">${rupiah(sisa)}</div></div>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h3>Riwayat modal dari admin</h3></div>
+    ${mine.length ? `
+    <table>
+      <thead><tr><th>Catatan</th><th>Tanggal</th><th style="text-align:right">Jumlah</th></tr></thead>
+      <tbody>
+        ${mine.map(c=>`
+          <tr>
+            <td style="color:var(--ink-soft)">${c.note||'—'}</td>
+            <td>${fmtDate(c.date)}</td>
+            <td style="text-align:right" class="amount">${rupiah(c.amount)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>` : emptyState('Admin belum memberikan modal kepada Anda.')}
+  </div>
+  `;
+}
+
+function renderUserForm(){
+  return `
+  <div class="panel">
+    <div class="panel-head"><h3>Catat pengeluaran baru</h3></div>
+    <label style="font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:8px;">Kategori</label>
+    ${getCats().length ? `
+    <div class="cat-choice">
+      ${getCats().map(c=>`
+        <label class="${STATE.formCat===c.key?'picked':''}" onclick="pickCat('${c.key}')">
+          <span class="cat-icon">${ICONS[c.iconKey]||ICONS.lainnya}</span> ${c.label}
+        </label>
+      `).join('')}
+    </div>` : `<div class="auth-hint">Belum ada kategori tersedia. Minta admin menambahkan kategori terlebih dahulu di menu Kategori.</div>`}
+    <div class="form-grid">
+      <div class="field"><label>Jumlah (Rp)</label><input id="exp-amount" type="number" min="0" placeholder="mis. 250000"></div>
+      <div class="field"><label>Tanggal</label><input id="exp-date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="field full"><label>Catatan (opsional)</label><textarea id="exp-note" rows="2" placeholder="mis. sewa truk untuk angkut kayu ke gudang"></textarea></div>
+    </div>
+    <div id="exp-msg" class="auth-msg"></div>
+    <button class="btn btn-orange" onclick="submitExpense()">${ICONS.plus} Simpan pengeluaran</button>
+  </div>
+  `;
+}
+
+function renderUserHistory(){
+  const mine = myExpenses();
+  return `
+  <div class="panel">
+    <div class="panel-head"><h3>Riwayat pengeluaran saya</h3><span class="tag">Total: ${rupiah(totalOf(mine))}</span></div>
+    ${mine.length ? `
+    <table>
+      <thead><tr><th>Kategori</th><th>Catatan</th><th>Tanggal</th><th style="text-align:right">Jumlah</th><th></th></tr></thead>
+      <tbody>
+        ${mine.map(e=>`
+          <tr>
+            <td><span class="tag">${catIcon(e.category)} ${catLabel(e.category)}</span></td>
+            <td style="color:var(--ink-soft)">${e.note||'—'}</td>
+            <td>${fmtDate(e.date)}</td>
+            <td style="text-align:right" class="amount">${rupiah(e.amount)}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteExpense('${e.id}')">${ICONS.trash}</button></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>` : emptyState('Anda belum mencatat pengeluaran apa pun.')}
+  </div>
+  `;
+}
+
+function renderUserLocation(){
+  const loc = STATE.locations[STATE.currentUser.username];
+  return `
+  <div class="panel">
+    <div class="panel-head"><h3>Bagikan lokasi</h3></div>
+    <div class="loc-hero">
+      <div class="loc-status">
+        <div style="font-size:13px;color:var(--ink-soft);">Lokasi terakhir dibagikan</div>
+        <div class="big">${loc ? loc.lat.toFixed(5)+', '+loc.lng.toFixed(5) : 'Belum ada data lokasi'}</div>
+        <span class="badge-ago">${timeAgo(loc && loc.ts)}</span>
+      </div>
+      <button id="share-loc-btn" class="btn btn-orange" onclick="shareLocation()">${ICONS.loc2} Bagikan lokasi sekarang</button>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h3>Peta lokasi saya</h3></div>
+    <div id="map"></div>
+  </div>
+  `;
+}
+
+function renderUser(){
+  const tabs = [
+    {key:'overview', label:'Ringkasan Saya', icon:ICONS.home, action:"setUserTab('overview')"},
+    {key:'modal', label:'Modal Saya', icon:ICONS.dompet, action:"setUserTab('modal')"},
+    {key:'catat', label:'Catat Pengeluaran', icon:ICONS.plus, action:"setUserTab('catat')"},
+    {key:'riwayat', label:'Riwayat', icon:ICONS.list, action:"setUserTab('riwayat')"},
+    {key:'lokasi', label:'Lokasi', icon:ICONS.map, action:"setUserTab('lokasi')"},
+  ];
+  const titles = {overview:'Ringkasan saya', modal:'Modal saya', catat:'Catat pengeluaran', riwayat:'Riwayat pengeluaran', lokasi:'Lokasi'};
+  const subs = {
+    overview:'Lihat total dan rincian pengeluaran lapangan Anda.',
+    modal:'Modal yang diberikan admin dan sisa yang masih bisa dipakai.',
+    catat:'Masukkan pengeluaran hari ini agar tercatat rapi.',
+    riwayat:'Semua pengeluaran yang pernah Anda catat.',
+    lokasi:'Bagikan posisi Anda agar admin tahu lokasi kerja.'
+  };
+  let body = '';
+  if(STATE.userTab==='overview') body = renderUserOverview();
+  else if(STATE.userTab==='modal') body = renderUserCapital();
+  else if(STATE.userTab==='catat') body = renderUserForm();
+  else if(STATE.userTab==='riwayat') body = renderUserHistory();
+  else if(STATE.userTab==='lokasi') body = renderUserLocation();
+
+  return `
+  <div class="dash-shell">
+    ${sidebar('user', STATE.userTab, tabs)}
+    <div class="main">
+      <div class="topbar"><div><h2>${titles[STATE.userTab]}</h2><div class="sub">${subs[STATE.userTab]}</div></div></div>
+      <div class="content">${body}</div>
+    </div>
+  </div>`;
+}
+
+/* ============ MAP INIT ============ */
+function initMapIfNeeded(){
+  const mapEl = document.getElementById('map');
+  if(!mapEl || typeof L === 'undefined') return;
+
+  let markers = [];
+  if(STATE.view === 'admin' && STATE.adminTab === 'locations'){
+    const employees = STATE.users.filter(u=>u.role==='user');
+    employees.forEach(u=>{
+      const loc = STATE.locations[u.username];
+      if(loc) markers.push({name:u.name, lat:loc.lat, lng:loc.lng, ts:loc.ts});
+    });
+  } else if(STATE.view === 'user' && STATE.userTab === 'lokasi'){
+    const loc = STATE.locations[STATE.currentUser.username];
+    if(loc) markers.push({name:STATE.currentUser.name, lat:loc.lat, lng:loc.lng, ts:loc.ts});
+  }
+
+  const center = markers.length ? [markers[0].lat, markers[0].lng] : [-6.9175, 107.6191];
+  const map = L.map('map', {scrollWheelZoom:true}).setView(center, markers.length?12:9);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors', maxZoom:18
+  }).addTo(map);
+
+  const orangeIcon = L.divIcon({
+    className: '', html: `<div style="background:#C1621F;width:16px;height:16px;border-radius:50%;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.4);"></div>`,
+    iconSize:[16,16], iconAnchor:[8,8]
+  });
+
+  markers.forEach(m=>{
+    L.marker([m.lat, m.lng], {icon:orangeIcon}).addTo(map)
+      .bindPopup(`<b>${m.name}</b><br>${timeAgo(m.ts)}`);
+  });
+
+  if(STATE.view === 'admin' && STATE.selectedEmp){
+    const loc = STATE.locations[STATE.selectedEmp];
+    if(loc) map.setView([loc.lat, loc.lng], 14);
+  }
+
+  setTimeout(()=>{ map.invalidateSize(); }, 100);
+}
+
+/* ============ MASTER RENDER ============ */
+function render(){
+  const app = document.getElementById('app');
+  let html = '';
+  if(STATE.view === 'loading'){
+    html = `<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--forest-dark);color:#fff;">${ringMark(48)}</div>`;
+  } else if(STATE.view === 'login'){
+    html = renderLogin();
+  } else if(STATE.view === 'admin'){
+    html = renderAdmin();
+  } else if(STATE.view === 'user'){
+    html = renderUser();
+  }
+  app.innerHTML = html;
+
+  const needsMap = (STATE.view==='admin' && STATE.adminTab==='locations') || (STATE.view==='user' && STATE.userTab==='lokasi');
+  if(needsMap){ initMapIfNeeded(); }
+}
+
+/* ============ INIT ============ */
+(async function init(){
+  await loadAll();
+  STATE.view = 'login';
+  render();
+})();
+</script>
+</body>
+</html>

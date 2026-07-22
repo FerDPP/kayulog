@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"time"
 
-	"kayulog-backend/database"
-	"kayulog-backend/middleware"
-	"kayulog-backend/models"
+	"kayulog/backend/database"
+	"kayulog/backend/middleware"
+	"kayulog/backend/models"
 
 	"github.com/gorilla/mux"
 )

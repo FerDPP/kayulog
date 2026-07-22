@@ -3,8 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	"kayulog-backend/database"
-	"kayulog-backend/models"
+	"kayulog/backend/database"
+	"kayulog/backend/models"
 
 	"github.com/gorilla/mux"
 )

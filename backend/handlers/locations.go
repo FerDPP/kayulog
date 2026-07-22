@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"kayulog-backend/database"
-	"kayulog-backend/middleware"
-	"kayulog-backend/models"
+	"kayulog/backend/database"
+	"kayulog/backend/middleware"
+	"kayulog/backend/models"
 )
 
 // GetLocations returns all employee locations (admin) or own location (user)
