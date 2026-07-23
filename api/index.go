@@ -2,7 +2,6 @@ package api
 
 import (
 	"net/http"
-	"strings"
 
 	"kayulog/backend/database"
 	"kayulog/backend/handlers"
