@@ -8,7 +8,7 @@ Silakan gunakan data berikut saat membuat database baru di [Supabase](https://su
 
 - **Nama Project**: `kayulog`
 - **Region**: `Singapore`
-- **Database Password**: `KayuLogAdmin2026!#`
+- **Database Password**: `KayulogRahasia123`
 
 *(⚠️ Simpan password di atas baik-baik karena Anda tidak akan bisa melihatnya lagi di dashboard Supabase setelah project dibuat).*
 
@@ -18,9 +18,10 @@ Silakan gunakan data berikut saat membuat database baru di [Supabase](https://su
 
 1. Buat database di Supabase menggunakan kredensial di atas.
 2. Di Supabase, masuk ke **Project Settings (⚙️) -> Database -> Connection string -> URI**.
-3. Copy URL yang berawalan `postgresql://...`
-4. Ganti tulisan `[YOUR-PASSWORD]` di URL tersebut dengan password di atas. Hasil akhirnya akan terlihat kira-kira seperti ini:
-   `postgresql://postgres.xxx:KayuLogAdmin2026!#@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres`
+3. Centang opsi **Use connection pooling** (Transaction pooler) agar Vercel bisa terhubung menggunakan IPv4.
+4. Copy URL yang baru (berawalan `postgresql://...` dengan port `6543`).
+5. Ganti tulisan `[YOUR-PASSWORD]` di URL tersebut dengan password di atas. Hasil akhirnya akan terlihat kira-kira seperti ini:
+   `postgresql://postgres.uragsvjtuhyenxuegdwf:KayulogRahasia123@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres`
 5. Buka dashboard Vercel, masuk ke project `kayulog` -> tab **Settings** -> **Environment Variables**.
 6. Tambahkan variabel dengan **Key**: `DATABASE_URL` dan **Value**: *(URL Supabase Anda yang sudah diganti passwordnya)*.
 7. Simpan (Save).
