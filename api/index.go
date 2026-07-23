@@ -77,16 +77,15 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Read original path from query parameter (injected by Vercel rewrite)
+	pathParam := r.URL.Query().Get("path")
+	if pathParam != "" {
+		r.URL.Path = "/api/" + pathParam
+	}
+
 	// Let the router handle the request
 	// Apply CORS middleware
 	handler := middleware.CORS(router)
-
-	// In Vercel, the path might not exactly match our mux setup if rewritten
-	// But since we mapped /api/(.*) -> /api/index, the URL Path inside the function will be correct (/api/something)
-	// Some Vercel deployments strip the prefix, so we check and ensure it works
-	if !strings.HasPrefix(r.URL.Path, "/api") {
-		r.URL.Path = "/api" + r.URL.Path
-	}
 
 	handler.ServeHTTP(w, r)
 }
