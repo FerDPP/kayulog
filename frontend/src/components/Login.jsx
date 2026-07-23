@@ -96,9 +96,6 @@ export function Login() {
               </div>
               <div className="auth-msg">{msg}</div>
               <button className="btn btn-primary" onClick={handleLogin}>Masuk</button>
-              <div className="auth-hint">
-                <b>Akun admin bawaan:</b> username <b>admin</b>, kata sandi <b>admin123</b>. Segera ganti bila perlu.
-              </div>
             </>
           ) : (
             <>
