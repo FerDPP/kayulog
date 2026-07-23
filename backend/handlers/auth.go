@@ -121,6 +121,52 @@ func GetMe(w http.ResponseWriter, r *http.Request) {
 	jsonResponse(w, user)
 }
 
+// UpdatePassword allows a user to change their own password
+func UpdatePassword(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetClaims(r)
+
+	var req models.UpdatePasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		jsonError(w, "Data tidak valid", http.StatusBadRequest)
+		return
+	}
+
+	if req.CurrentPassword == "" || req.NewPassword == "" {
+		jsonError(w, "Harap isi semua kolom password", http.StatusBadRequest)
+		return
+	}
+
+	// Get current password hash
+	var currentHash string
+	err := database.DB.QueryRow("SELECT password_hash FROM users WHERE id = $1", claims.UserID).Scan(&currentHash)
+	if err != nil {
+		jsonError(w, "User tidak ditemukan", http.StatusNotFound)
+		return
+	}
+
+	// Verify current password
+	if err := bcrypt.CompareHashAndPassword([]byte(currentHash), []byte(req.CurrentPassword)); err != nil {
+		jsonError(w, "Password saat ini salah", http.StatusUnauthorized)
+		return
+	}
+
+	// Hash new password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		jsonError(w, "Gagal mengamankan password", http.StatusInternalServerError)
+		return
+	}
+
+	// Update password in database
+	_, err = database.DB.Exec("UPDATE users SET password_hash = $1 WHERE id = $2", string(hashedPassword), claims.UserID)
+	if err != nil {
+		jsonError(w, "Gagal menyimpan password baru", http.StatusInternalServerError)
+		return
+	}
+
+	jsonResponse(w, map[string]string{"message": "Password berhasil diubah"})
+}
+
 func generateToken(user models.User) (string, error) {
 	claims := &middleware.Claims{
 		UserID:   user.ID,

@@ -6,6 +6,7 @@ import UserCapital from './UserCapital';
 import ExpenseForm from './ExpenseForm';
 import ExpenseHistory from './ExpenseHistory';
 import UserLocation from './UserLocation';
+import Settings from '../Settings';
 
 const TABS = [
   { key: 'overview', label: 'Ringkasan Saya', icon: ICONS.home },
@@ -13,6 +14,7 @@ const TABS = [
   { key: 'catat', label: 'Catat Pengeluaran', icon: ICONS.plus },
   { key: 'riwayat', label: 'Riwayat', icon: ICONS.list },
   { key: 'lokasi', label: 'Lokasi', icon: ICONS.map },
+  { key: 'settings', label: 'Pengaturan', icon: ICONS.settings },
 ];
 
 const TITLES = {
@@ -21,6 +23,7 @@ const TITLES = {
   catat: 'Catat pengeluaran',
   riwayat: 'Riwayat pengeluaran',
   lokasi: 'Lokasi',
+  settings: 'Pengaturan akun',
 };
 
 const SUBS = {
@@ -29,6 +32,7 @@ const SUBS = {
   catat: 'Masukkan pengeluaran hari ini agar tercatat rapi.',
   riwayat: 'Semua pengeluaran yang pernah Anda catat.',
   lokasi: 'Bagikan posisi Anda agar admin tahu lokasi kerja.',
+  settings: 'Ubah password dan kelola pengaturan akun Anda.',
 };
 
 export default function UserLayout() {
@@ -43,6 +47,7 @@ export default function UserLayout() {
       case 'catat': return <ExpenseForm onDone={() => setTab('riwayat')} />;
       case 'riwayat': return <ExpenseHistory />;
       case 'lokasi': return <UserLocation />;
+      case 'settings': return <Settings />;
       default: return <UserOverview onNavigate={onNavigate} />;
     }
   };

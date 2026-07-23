@@ -91,6 +91,11 @@ type RegisterRequest struct {
 	Name     string `json:"name"`
 }
 
+type UpdatePasswordRequest struct {
+	CurrentPassword string `json:"current_password"`
+	NewPassword     string `json:"new_password"`
+}
+
 type LoginResponse struct {
 	Token string `json:"token"`
 	User  User   `json:"user"`

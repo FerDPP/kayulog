@@ -33,6 +33,7 @@ func init() {
 	apiRoutes.Use(middleware.AuthMiddleware)
 
 	apiRoutes.HandleFunc("/me", handlers.GetMe).Methods("GET")
+	apiRoutes.HandleFunc("/me/password", handlers.UpdatePassword).Methods("PUT")
 	apiRoutes.HandleFunc("/dashboard", handlers.GetDashboardStats).Methods("GET")
 
 	// Expenses

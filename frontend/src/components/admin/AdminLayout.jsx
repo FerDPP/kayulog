@@ -8,6 +8,7 @@ import Sales from './Sales';
 import Locations from './Locations';
 import Categories from './Categories';
 import Employees from './Employees';
+import Settings from '../Settings';
 
 const TABS = [
   { key: 'overview', label: 'Ringkasan', icon: ICONS.home },
@@ -17,6 +18,7 @@ const TABS = [
   { key: 'locations', label: 'Lokasi Karyawan', icon: ICONS.map },
   { key: 'categories', label: 'Kategori', icon: ICONS.tag },
   { key: 'employees', label: 'Karyawan', icon: ICONS.users },
+  { key: 'settings', label: 'Pengaturan', icon: ICONS.settings },
 ];
 
 const TITLES = {
@@ -27,6 +29,7 @@ const TITLES = {
   sales: 'Penjualan kayu',
   categories: 'Kategori pengeluaran',
   employees: 'Karyawan',
+  settings: 'Pengaturan akun',
 };
 
 const SUBS = {
@@ -37,6 +40,7 @@ const SUBS = {
   sales: 'Catat hasil penjualan kayu ke perusahaan pembeli.',
   categories: 'Tambah atau hapus kategori sesuai kebutuhan lapangan.',
   employees: 'Kelola karyawan yang terdaftar di sistem.',
+  settings: 'Ubah password dan kelola pengaturan akun Anda.',
 };
 
 export default function AdminLayout() {
@@ -51,6 +55,7 @@ export default function AdminLayout() {
       case 'locations': return <Locations />;
       case 'categories': return <Categories />;
       case 'employees': return <Employees />;
+      case 'settings': return <Settings />;
       default: return <Overview />;
     }
   };
