@@ -12,10 +12,17 @@ import (
 )
 
 var router *mux.Router
+var initError error
 
 // init is called once when the Serverless Function starts (cold start)
 func init() {
-	database.Init()
+	initError = database.Init()
+
+	if initError != nil {
+		// We still need a router to exist so Handler doesn't crash on router == nil
+		router = mux.NewRouter()
+		return
+	}
 
 	r := mux.NewRouter()
 
@@ -62,6 +69,14 @@ func init() {
 
 // Handler is the Vercel Serverless Function entrypoint
 func Handler(w http.ResponseWriter, r *http.Request) {
+	// If database failed to connect, return 500 with the exact error message
+	if initError != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"error":"` + initError.Error() + `"}`))
+		return
+	}
+
 	// Let the router handle the request
 	// Apply CORS middleware
 	handler := middleware.CORS(router)

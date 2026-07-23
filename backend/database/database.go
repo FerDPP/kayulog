@@ -14,21 +14,21 @@ import (
 var DB *sql.DB
 
 // Init connects to PostgreSQL and sets up tables
-func Init() {
+func Init() error {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		// Default for local development (XAMPP-style, but now PostgreSQL)
+		// Default for local development
 		dsn = "postgres://postgres:postgres@localhost:5432/kayulog?sslmode=disable"
 	}
 
 	var err error
 	DB, err = sql.Open("postgres", dsn)
 	if err != nil {
-		log.Fatal("❌ Gagal koneksi ke PostgreSQL: ", err)
+		return fmt.Errorf("❌ Gagal koneksi PostgreSQL: %v", err)
 	}
 
 	if err = DB.Ping(); err != nil {
-		log.Fatal("❌ Database tidak merespon: ", err)
+		return fmt.Errorf("❌ Database tidak merespon: %v (Cek DATABASE_URL di Vercel)", err)
 	}
 
 	DB.SetMaxOpenConns(25)
@@ -38,6 +38,7 @@ func Init() {
 	seedDefaults()
 
 	fmt.Println("✅ Database PostgreSQL siap digunakan")
+	return nil
 }
 
 func createTables() {
@@ -99,7 +100,7 @@ func createTables() {
 
 	for _, t := range tables {
 		if _, err := DB.Exec(t); err != nil {
-			log.Fatal("❌ Gagal membuat tabel: ", err)
+			log.Println("❌ Gagal membuat tabel: ", err)
 		}
 	}
 }
