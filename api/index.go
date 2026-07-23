@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"kayulog/backend/database"
@@ -72,7 +73,9 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	if initError != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{"error":"` + initError.Error() + `"}`))
+		errorMap := map[string]string{"error": initError.Error()}
+		jsonBytes, _ := json.Marshal(errorMap)
+		w.Write(jsonBytes)
 		return
 	}
 
